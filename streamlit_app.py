@@ -183,7 +183,7 @@ def build_map(city_list, df, colors):
         paper_bgcolor='white',
         plot_bgcolor='white',
         margin=dict(l=10, r=10, t=60, b=30),
-        height=800,
+        height=560,
         annotations=[
             dict(
                 text="Basemap: Natural Earth",
