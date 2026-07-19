@@ -1,9 +1,7 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-import geopandas as gpd
-import cartopy.crs as ccrs
-import cartopy.feature as cfeature
+import plotly.graph_objects as go
 import ast
 
 st.set_page_config(
@@ -80,12 +78,6 @@ def load_data():
 
 df = load_data()
 
-@st.cache_resource
-def load_world():
-    return gpd.read_file("ne_110m_admin_0_countries\ne_110m_admin_0_countries.shp")
-
-world = load_world()
-
 months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
 PALETTE = ['#E4572E', '#2E86AB', '#5FA55A', '#8E44AD', '#D4A017',
@@ -107,7 +99,7 @@ def build_temp_chart(city_list, df, colors):
 
     ax.yaxis.grid(True, color='#DDDDDD', linewidth=0.8, zorder=0)
     ax.set_axisbelow(True)
-    
+
     use_labels = len(city_list) <= 6
 
     for city, series in temps_df.items():
@@ -148,49 +140,60 @@ def build_temp_chart(city_list, df, colors):
                  color='#1a1a1a', x=0.1, y=0.97, ha='left')
     ax.set_title(' · '.join(c.split(' (')[0] for c in city_list), fontsize=10,
                   color='#777777', loc='left', pad=10)
+    fig.text(0.1, 0.01, 'Data: monthly climate normals', fontsize=7.5, color='#999999')
 
     plt.subplots_adjust(left=0.1, right=0.84 if use_labels else 0.76, top=0.87, bottom=0.1)
     return fig
 
 
-def build_map(city_list, df, world, colors):
-    plt.rcParams['font.family'] = 'DejaVu Sans'
-    fig = plt.figure(figsize=(8, 6), dpi=150)
-    fig.patch.set_facecolor('white')
-
-    ax = plt.axes([0.03, 0.08, 0.94, 0.78], projection=ccrs.Robinson())
-    ax.set_extent([-180, 180, -60, 90], crs=ccrs.PlateCarree())
-    ax.set_facecolor('white')
-    ax.spines['geo'].set_visible(False)
-
-    ax.add_feature(cfeature.OCEAN, facecolor='#EAF3FA', zorder=0)
-    ax.add_feature(cfeature.LAND, facecolor='#F2F2F2', edgecolor='none', zorder=1)
-    ax.add_feature(cfeature.COASTLINE, linewidth=0.4, edgecolor='#B0B0B0', zorder=2)
-    ax.add_feature(cfeature.BORDERS, linewidth=0.3, edgecolor='#CFCFCF', zorder=2)
-    ax.gridlines(draw_labels=False, linewidth=0.3, color='#DDDDDD', alpha=0.6, zorder=1)
-
-    use_labels = len(city_list) <= 6
+def build_map(city_list, df, colors):
+    fig = go.Figure()
 
     for city in city_list:
         row = df[df['City'] == city].iloc[0]
         lon, lat = row['loc']['Lon'], row['loc']['Lat']
         color = colors[city]
 
-        ax.scatter(lon, lat, s=150, color='black', alpha=0.12,
-                   transform=ccrs.PlateCarree(), zorder=3, linewidth=0)
-        ax.scatter(lon, lat, s=110, color=color, edgecolor='white', linewidth=1.6,
-                   transform=ccrs.PlateCarree(), zorder=4)
+        fig.add_trace(go.Scattergeo(
+            lon=[lon], lat=[lat],
+            mode='markers+text',
+            marker=dict(size=13, color=color, line=dict(width=1.8, color='white')),
+            text=[city.split(' (')[0]],
+            textposition='top right',
+            textfont=dict(size=13, color=color, family='DejaVu Sans, Arial'),
+            showlegend=False,
+        ))
 
-        if use_labels:
-            ax.annotate(
-                city.split(' (')[0], xy=(lon, lat), xytext=(8, 5),
-                textcoords='offset points', fontsize=10.5, fontweight='bold',
-                color=color, xycoords=ccrs.PlateCarree()._as_mpl_transform(ax)
+    fig.update_geos(
+        projection_type='natural earth',
+        showland=True, landcolor='#F2F2F2',
+        showocean=True, oceancolor='#EAF3FA',
+        showcountries=True, countrycolor='#CFCFCF',
+        showcoastlines=True, coastlinecolor='#B0B0B0', coastlinewidth=0.8,
+        lataxis_range=[-60, 90],
+        showframe=False,
+        bgcolor='white',
+    )
+    fig.update_layout(
+        title=dict(
+            text='City Locations',
+            font=dict(size=20, color='#1a1a1a', family='DejaVu Sans, Arial', weight='bold'),
+            x=0.02, y=0.95
+        ),
+        paper_bgcolor='white',
+        plot_bgcolor='white',
+        margin=dict(l=10, r=10, t=60, b=30),
+        height=800,
+        annotations=[
+            dict(
+                text="Basemap: Natural Earth",
+                showarrow=False,
+                xref="paper", yref="paper",
+                x=0.02, y=0.0,
+                font=dict(size=10.5, color='#999999')
             )
-
-    fig.suptitle('City Locations', fontsize=14, fontweight='bold',
-                 color='#1a1a1a', x=0.06, y=0.95, ha='left')
-
+        ]
+    )
     return fig
 
 
@@ -218,5 +221,5 @@ if selected_cities:
         fig_line = build_temp_chart(selected_cities, df, colors)
         st.pyplot(fig_line, use_container_width=True)
     with col2:
-        fig_map = build_map(selected_cities, df, world, colors)
-        st.pyplot(fig_map, use_container_width=True)
+        fig_map = build_map(selected_cities, df, colors)
+        st.plotly_chart(fig_map, use_container_width=True)
