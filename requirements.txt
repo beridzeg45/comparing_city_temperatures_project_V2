@@ -1,7 +1,4 @@
 streamlit
 pandas
 matplotlib
-geopandas
-cartopy==0.24.1
-shapely
-pyproj
+plotly
