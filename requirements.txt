@@ -2,5 +2,6 @@ streamlit
 pandas
 matplotlib
 geopandas
-lxml
-cartopy==0.22.0
+cartopy==0.24.1
+shapely
+pyproj
