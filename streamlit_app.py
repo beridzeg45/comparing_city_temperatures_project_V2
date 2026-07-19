@@ -82,7 +82,7 @@ df = load_data()
 
 @st.cache_resource
 def load_world():
-    return gpd.read_file(r"ne_110m_admin_0_countries\ne_110m_admin_0_countries.shp")
+    return gpd.read_file("ne_110m_admin_0_countries\ne_110m_admin_0_countries.shp")
 
 world = load_world()
 
