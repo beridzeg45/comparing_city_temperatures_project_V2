@@ -83,7 +83,7 @@ months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec
 PALETTE = ['#E4572E', '#2E86AB', '#5FA55A', '#8E44AD', '#D4A017',
            '#C0392B', '#16A085', '#7F8C8D', '#E67E22', '#2C3E50']
 
-DEFAULT_CITIES = ['Tbilisi (Georgia)', 'Beirut (Lebanon)', 'Wellington (New Zealand)']
+DEFAULT_CITIES = ['Surami (Georgia)', 'Tyre (Lebanon)', 'Wellington (New Zealand)']
 
 
 def build_temp_chart(city_list, df, colors):
